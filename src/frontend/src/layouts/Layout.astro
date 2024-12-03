@@ -1,0 +1,36 @@
+---
+import Header from '../components/Header.astro'
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+---
+
+<script>
+  import 'htmx.org'
+  import Alpine from 'alpinejs'
+
+  import * as globals from '../services/globals'
+  Object.assign(window, globals) // this lets us access stuff inside alpine.js attributes
+
+  Alpine.store('room', {})
+  Alpine.store('user', {})
+  Alpine.start()
+</script>
+
+<html lang="en">
+  <head>
+    <title>{title || 'Pointy Thing'}</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Pointy Thing" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <Header />
+    <slot />
+  </body>
+</html>

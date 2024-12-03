@@ -1,0 +1,24 @@
+---
+
+---
+
+<script>
+  import htmx from 'htmx.org'
+
+  htmx.defineExtension('json-form', {
+    transformResponse: (text) => {
+      const obj = JSON.parse(text)
+      if (obj.redirect) {
+        window.location.assign(obj.redirect)
+        return null
+      } else if (obj.errors) {
+        // handle errors
+      }
+      return text
+    },
+  })
+</script>
+
+<form hx-ext="json-form" hx-disabled-elt="input, button" {...Astro.props}>
+  <slot />
+</form>

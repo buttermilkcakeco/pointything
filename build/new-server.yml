@@ -1,0 +1,41 @@
+---
+- name: Deploy a new server
+  hosts: all
+  gather_facts: no
+  connection: local
+  module_defaults:
+      group/aws:
+        aws_access_key: '{{ aws_access_key }}'
+        aws_secret_key: '{{ aws_secret_key }}'
+        region: '{{ aws_region }}'
+
+  tasks: []
+  - name: Launch new server
+    import_tasks: tasks/newserver.yml
+
+- name: Provision the new server
+  hosts: all
+  gather_facts: no
+  module_defaults:
+    group/aws:
+      aws_access_key: '{{ aws_access_key }}'
+      aws_secret_key: '{{ aws_secret_key }}'
+      region: '{{ aws_region }}'
+  vars:
+  - ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+  - name: Establish connection
+    wait_for_connection:
+
+  - name: Install everything on server
+    import_tasks: tasks/installtools.yml
+
+  - name: Copy source files over
+    import_tasks: tasks/copysource.yml
+
+  - name: Set up the SSL certs
+    import_tasks: tasks/initcerts.yml
+
+  - name: Deploy the latest app image
+    import_tasks: tasks/deployapp.yml

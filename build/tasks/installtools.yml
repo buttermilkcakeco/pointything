@@ -1,0 +1,43 @@
+---
+- name: Upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+  become: yes
+
+- name: Install docker and pip
+  yum:
+    name:
+    - docker
+    - python3-pip
+    state: latest
+  become: yes
+
+- name: Install docker-compose
+  get_url:
+    url : https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: 'a+x'
+  become: yes
+
+- name: Start and enable docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  become: yes
+
+- name: Add user to docker group
+  shell: usermod -a -G docker {{ ansible_user }}
+  become: yes
+
+- name: Reset ssh connection to allow user changes to take affect
+  meta: reset_connection
+
+- name: Install python dependencies
+  ansible.builtin.pip:
+    name:
+    - boto3
+    - botocore
+    - docker==6.1.3
+    - requests==2.31.0

@@ -1,0 +1,13 @@
+---
+- name: Deploy the latest app
+  hosts: prod
+  gather_facts: no
+  module_defaults:
+      group/aws:
+        aws_access_key: '{{ aws_access_key }}'
+        aws_secret_key: '{{ aws_secret_key }}'
+        region: '{{ aws_region }}'
+
+  tasks:
+  - name: Deploy the latest app image
+    import_tasks: tasks/deployapp.yml

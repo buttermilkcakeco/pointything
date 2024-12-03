@@ -1,0 +1,48 @@
+---
+import Button from '../components/Button.astro'
+import Input from '../components/Input.astro'
+import Layout from '../layouts/Layout.astro'
+---
+
+<script>
+  import { joinRoom } from '../services/room'
+
+  const roomId = window.location.pathname.match(/\/join\/([0-9a-z-]+)/)[1]
+  if (!roomId) {
+    window.location.replace('/')
+  }
+
+  document
+    .getElementById('join-form')
+    .addEventListener('submit', async (ev: SubmitEvent) => {
+      ev.preventDefault()
+      if (ev.target instanceof HTMLFormElement) {
+        const userName = (
+          ev.target.querySelector('[name="userName"]') as HTMLInputElement
+        ).value
+        if (userName) {
+          const userId = await joinRoom({ roomId, userName })
+          if (userId) {
+            window.location.assign(`/room/${roomId}/${userId}`)
+          }
+        }
+      }
+    })
+</script>
+
+<Layout title="Pointy Thing">
+  <main class="flex flex-col items-center">
+    <h2 class="mt-24 text-lg">Join Room</h2>
+    <div class="mt-6">
+      <form id="join-form">
+        <Input
+          className="me-8"
+          type="text"
+          name="userName"
+          placeholder="Your Name"
+        />
+        <Button type="submit">Join</Button>
+      </form>
+    </div>
+  </main>
+</Layout>

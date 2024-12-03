@@ -1,0 +1,44 @@
+---
+- name: Create a new SSL cert
+  hosts: prod
+  gather_facts: no
+
+  tasks:
+  - name: Run certbot to get the cert
+    shell: src/tools/certbot.sh certonly --webroot -w /opt/certbot/www -d {{ inventory_hostname }} -m {{ letsencrypt_email }} -n --agree-tos
+
+  - name: Remove the temporary cert
+    file:
+      path: ./certs/{{ item }}.pem
+      state: absent
+    loop: [ fullchain, privkey ]
+
+  - name: Copy the new certificate files
+    copy:
+      src: letsencrypt/live/{{ inventory_hostname }}/{{ item }}.pem
+      dest: ./certs/
+      remote_src: yes
+    loop: [ fullchain, privkey ]
+    become: yes
+
+  - name: Zip up the letsencrypt data
+    archive:
+      path: ./letsencrypt
+      dest: "{{ cert_name }}"
+    become: yes
+
+  - name: Copy letsencrypt data off server
+    fetch:
+      src: "{{ cert_name }}"
+      dest: certs/
+      flat: yes
+
+  - name: Remove the letsencrypt data
+    file:
+      path: "{{ item }}"
+      state: absent
+    loop: [ "{{ cert_name }}", letsencrypt, letsencrypt-lib ]
+    become: yes
+
+  - name: Restart web server
+    shell: docker-compose restart frontend

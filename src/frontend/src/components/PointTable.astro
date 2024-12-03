@@ -1,0 +1,29 @@
+---
+
+---
+
+<div class="bg-secondary w-72" x-data>
+  <div class="bg-primary mb-2 p-2 text-center">
+    <h2 class="text-primary-text text-md">Vote Results</h2>
+  </div>
+
+  <template x-for="user in $store.room.participants">
+    <div class="flex flex-row items-center my-2 mx-5">
+      <div class="flex-1 px-2" x-text="user.name"></div>
+      <div class="px-2">
+        <template x-if="$store.room.revealed">
+          <span x-text="user.vote || '-'"></span>
+        </template>
+        <template x-if="!$store.room.revealed">
+          <span
+            :class="user.vote ? 'iconify mdi--check-circle' : 'iconify mdi--timer-sand'"
+          ></span>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="$store.room.revealed && room.consensus()">
+    <div class="my-2 mx-5 bg-success text-center rounded-lg">Consensus!</div>
+  </template>
+</div>

@@ -1,0 +1,41 @@
+# this is a docker compose for the local dev server
+
+name: pointything
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - 8080:80
+    env_file:
+      - .env
+    volumes:
+      - ./containers/frontend/nginx/default.conf.dev:/etc/nginx/conf.d/default.conf
+      - ./containers/frontend/nginx/common.conf:/etc/nginx/common.conf
+      - ./src/frontend/dist:/app/frontend
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    image: pointything/local-backend
+    build:
+      dockerfile: containers/backend/Dockerfile
+      context: .
+    restart: always
+    environment:
+      APP_ALLOWED_HOSTS: localhost
+      APP_HOSTNAME: localhost:8080
+      APP_SECRET_KEY: thisisalocaldevserversoitdoesnotmatter
+      APP_DEBUG: "True"
+      APP_DB_HOST: redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/app
+
+  redis:
+    image: redis/redis-stack:latest
+    restart: always
+    ports:
+      - 8001:8001

@@ -1,0 +1,31 @@
+---
+- name: Look up the ECR repo URL
+  import_tasks: ./aws_repo_url.yml
+
+- name: Delete source tree
+  file:
+    path: src
+    state: absent
+
+- name: Copy source directory structure
+  file:
+    path: "src/{{ item.path }}"
+    state: directory
+  with_filetree: "{{ playbook_dir }}/src"
+  when: item.state == "directory"
+
+- name: Copy source files
+  template:
+    src: "{{ item.src }}"
+    dest: "src/{{ item.path }}"
+  with_filetree: "{{ playbook_dir }}/src"
+  when: item.state == "file"
+
+- name: Mark tools as executable
+  file:
+    path: src/tools
+    recurse: yes
+    mode: '+x'
+
+- name: Move docker-compose.yml
+  shell: mv src/docker-compose.yml .

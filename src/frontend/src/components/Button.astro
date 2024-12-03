@@ -1,0 +1,37 @@
+---
+import spinner from '../img/tail-spin.svg'
+
+const { className, ...props } = Astro.props
+---
+
+<button
+  class:list={[
+    'px-4 py-2',
+    'rounded',
+    'bg-primary',
+    'disabled:opacity-50',
+    'text-primary-text',
+    className,
+  ]}
+  {...props}
+>
+  <slot />
+
+  {
+    props.type === 'submit' && (
+      <img class="ms-2 h-4 htmx-indicator" src={spinner.src} />
+    )
+  }
+</button>
+
+<style is:global>
+  .htmx-indicator {
+    display: none;
+  }
+  .htmx-request .htmx-indicator {
+    display: inline;
+  }
+  .htmx-request.htmx-indicator {
+    display: inline;
+  }
+</style>

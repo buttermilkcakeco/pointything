@@ -1,0 +1,77 @@
+---
+- name: Build the frontend image
+  hosts: all
+  connection: local
+  gather_facts: no
+
+  tasks:
+  - name: Build the application
+    shell:
+      cmd: pnpm install --frozen-lockfile && pnpm build
+      chdir: ../src/frontend
+
+  - name: Remove old container image
+    shell: docker rmi {{ app_container_name }}/frontend
+    ignore_errors: yes
+
+  - name: Build the container image
+    shell:
+      cmd: docker build -t {{ app_container_name }}/frontend -f containers/frontend/Dockerfile .
+      chdir: ..
+
+- name: Build the backend image
+  hosts: all
+  connection: local
+  gather_facts: no
+
+  tasks:
+  - name: Remove old container image
+    shell: docker rmi {{ app_container_name }}/backend
+    ignore_errors: yes
+
+  - name: Build the container image
+    shell:
+      cmd: docker build -t {{ app_container_name }}/backend -f containers/backend/Dockerfile .
+      chdir: ..
+
+- name: Upload the images to ECR
+  hosts: prod
+  connection: local
+  gather_facts: no
+  module_defaults:
+    group/aws:
+      aws_access_key: '{{ aws_access_key }}'
+      aws_secret_key: '{{ aws_secret_key }}'
+      region: '{{ aws_region }}'
+
+  tasks:
+  - name: Get the version
+    shell: sed -n "s/VERSION = '\(.*\)'/\1/p" < ../src/backend/version.py
+    register: version
+
+  - name: Look up the ECR repo URL
+    import_tasks: tasks/aws_repo_url.yml
+
+  - name: Log in to ECR
+    shell: "$(AWS_ACCESS_KEY_ID={{aws_access_key}} AWS_SECRET_ACCESS_KEY={{aws_secret_key}} aws ecr get-login --no-include-email --region {{ aws_region }})"
+
+  - name: Remove app image if it exists
+    shell: AWS_ACCESS_KEY_ID={{aws_access_key}} AWS_SECRET_ACCESS_KEY={{aws_secret_key}} aws ecr batch-delete-image --repository-name {{ item }} --image-ids imageTag={{ version.stdout }} imageTag=latest
+    ignore_errors: yes
+    loop: [ "{{ aws_repo_name }}/backend", "{{ aws_repo_name }}/frontend" ]
+
+  - name: Tag backend image
+    shell: docker tag {{ aws_repo_name }}/backend:latest {{ aws_backend_repo_url }}:{{ item }}
+    loop: [ latest, "{{ version.stdout }}" ]
+
+  - name: Push backend image
+    shell: docker push {{ aws_backend_repo_url }}:{{ item }}
+    loop: [ latest, "{{ version.stdout }}" ]
+
+  - name: Tag frontend image
+    shell: docker tag {{ aws_repo_name }}/frontend:latest {{ aws_frontend_repo_url }}:{{ item }}
+    loop: [ latest, "{{ version.stdout }}" ]
+
+  - name: Push frontend image
+    shell: docker push {{ aws_frontend_repo_url }}:{{ item }}
+    loop: [ latest, "{{ version.stdout }}" ]

@@ -1,0 +1,31 @@
+services:
+  frontend:
+    image: "{{ aws_frontend_repo_url }}:latest"
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./certs:/etc/certs
+      - ./src/default.conf.prod:/etc/nginx/conf.d/default.conf
+      - /data/static:/usr/src/static
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    image: "{{ aws_backend_repo_url }}:latest"
+    ports:
+      - 9090:9090
+    restart: always
+    environment:
+      APP_ALLOWED_HOSTS: "{{ inventory_hostname }}"
+      APP_HOSTNAME: "{{ inventory_hostname }}"
+      APP_SECRET_KEY: "{{ redis_root_password }}"
+      APP_DB_HOST: "redis://redis:6379"
+      APP_DEBUG: "False"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis/redis-stack:latest
+    restart: always

@@ -1,0 +1,13 @@
+---
+app_name: pointything
+
+aws_region: "us-east-2"
+aws_availability_zone: "us-east-2a"
+aws_resource_name: "{{ app_name }}"
+app_container_name: "{{ app_name }}"
+aws_repo_name: "{{ app_name }}"
+aws_instance_type: "t2.micro"
+aws_ami_id: "/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64"
+aws_volume_size: 16
+
+cert_name: "{{ app_name }}.tgz"

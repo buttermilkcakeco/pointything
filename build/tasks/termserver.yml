@@ -1,0 +1,33 @@
+---
+- name: Lookup existing instance
+  import_tasks: ./aws_instance_id.yml
+  vars:
+    instance_name: '{{ aws_resource_name }}'
+
+- name: debug
+  debug: msg="{{ instance_id }}"
+
+- name: Terminate existing instance
+  amazon.aws.ec2_instance:
+    state: absent
+    instance_ids:
+      - "{{ instance_id }}"
+  when:
+    instance_id
+
+- name: Disassociate elastic IP
+  community.aws.ec2_eip:
+    device_id: "{{ instance_id }}"
+    ip: "{{ instance_ip }}"
+    state: absent
+  when:
+    instance_id
+
+- name: Remove name from old instance
+  amazon.aws.ec2_tag:
+    resource: "{{ instance_id }}"
+    state: present
+    tags:
+      Name: ''
+  when:
+    instance_id

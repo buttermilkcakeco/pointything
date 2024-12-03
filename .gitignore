@@ -1,0 +1,9 @@
+*.pyc
+node_modules
+.pnpm-store
+pylint-out.txt
+.pylint.d
+.env
+build/certs
+db.sqlite3
+hosts.yml

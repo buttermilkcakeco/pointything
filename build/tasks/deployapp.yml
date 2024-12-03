@@ -1,0 +1,20 @@
+---
+- name: Look up the ECR repo URL
+  import_tasks: ./aws_repo_url.yml
+
+- name: Get the current caller identity information
+  amazon.aws.aws_caller_info:
+  register: caller_info
+
+- name: Log in to ECR
+  shell: "AWS_ACCESS_KEY_ID={{aws_access_key}} AWS_SECRET_ACCESS_KEY={{aws_secret_key}} aws ecr get-login-password --region {{ aws_region }} | docker login  --username AWS --password-stdin {{ caller_info.account }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+- name: Pull the images
+  shell: docker pull {{ item }}:latest
+  loop: [ "{{ aws_backend_repo_url }}", "{{ aws_frontend_repo_url }}"]
+
+- name: Stop server images
+  shell: docker-compose down
+
+- name: Start server images
+  shell: docker-compose up -d

@@ -1,0 +1,16 @@
+---
+- name: Look up the backend ECR repo URL
+  community.aws.ecs_ecr:
+    name: "{{ aws_repo_name }}/backend"
+  register: ecr
+
+- name: Set the repo url variable
+  set_fact: aws_backend_repo_url="{{ ecr.repository.repositoryUri }}"
+
+- name: Look up the frontend ECR repo URL
+  community.aws.ecs_ecr:
+    name: "{{ aws_repo_name }}/frontend"
+  register: ecr
+
+- name: Set the repo url variable
+  set_fact: aws_frontend_repo_url="{{ ecr.repository.repositoryUri }}"

@@ -1,0 +1,10 @@
+upstream channels-backend {
+    server backend:9090;
+}
+
+server {
+    listen       80;
+    server_name  localhost;
+
+    include /etc/nginx/common.conf;
+}

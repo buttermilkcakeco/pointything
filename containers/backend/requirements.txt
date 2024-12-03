@@ -1,0 +1,6 @@
+Django
+channels
+channels_redis
+redis
+uvicorn[standard]
+pytz

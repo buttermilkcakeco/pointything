@@ -1,0 +1,91 @@
+---
+- name: Create the EC2 security group
+  amazon.aws.ec2_security_group:
+    name: "{{ aws_resource_name }}"
+    description: "Security Group for {{ app_name }}"
+    vpc_id: "{{ aws_vpc_id }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: Allow all HTTP
+      - proto: tcp
+        ports:
+          - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: Allow all HTTPS
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: Allow all SSH
+  register: sg
+
+- name: Spin up a new server
+  amazon.aws.ec2_instance:
+    name: "{{ aws_resource_name }}"
+    availability_zone: "{{ aws_availability_zone }}"
+    instance_type: "{{ aws_instance_type }}"
+    image_id: "{{ lookup('aws_ssm', aws_ami_id, region=aws_region) }}"
+    key_name: "{{ aws_keyname }}"
+    security_group: "{{ sg.group_id }}"
+    wait: true
+  register: ec2
+
+- name: Wait for the server to boot
+  amazon.aws.ec2_instance_info: instance_ids={{ ec2.instance_ids }}
+  register: i
+  until: i.instances[0].state.name == "running"
+  retries: 24
+  delay: 5
+
+- name: Lookup existing instance
+  import_tasks: ./aws_instance_id.yml
+  vars:
+    instance_name: '{{ aws_resource_name }}'
+
+- name: Resize volume
+  amazon.aws.ec2_vol:
+    instance: "{{ instance_id }}"
+    id: "{{ instance_vol_id }}"
+    modify_volume: true
+    volume_size: "{{ aws_volume_size }}"
+  register: resize_volume
+
+- name: Reboot if volume is resized so partition is resized by cloud-init
+  amazon.aws.ec2_instance:
+    state: rebooted
+    instance_ids: "{{ ec2.instance_ids }}"
+  when: resize_volume.changed
+
+- name: Allocate and assign elastic IP
+  amazon.aws.ec2_eip:
+    device_id: "{{ ec2.instance_ids[0] }}"
+    in_vpc: true
+    reuse_existing_ip_allowed: true
+    tag_name: "{{ aws_resource_name }}"
+  register: eip
+
+- name: Add the A record in Route53 DNS
+  amazon.aws.route53:
+    state: present
+    zone: "{{ inventory_hostname.split('.')[-2:] | join('.')}}"
+    record: "{{ inventory_hostname }}"
+    type: A
+    ttl: 7200
+    identifier: "{{ aws_resource_name }}"
+    value: "{{ eip.public_ip }}"
+    overwrite: true
+    wait: true
+
+- name: Remove ssh known_hosts
+  known_hosts:
+    name: "{{ item }}"
+    state: absent
+  loop: ["{{ inventory_hostname }}", "{{ eip.public_ip }}"]
+
+- name: Add the new server as a host
+  add_host:
+    name: '{{ inventory_hostname }}'
+  when: add_new_host is defined and add_new_host

@@ -1,0 +1,14 @@
+---
+- name: Terminate a server
+  hosts: all
+  gather_facts: no
+  connection: local
+  module_defaults:
+      group/aws:
+        aws_access_key: '{{ aws_access_key }}'
+        aws_secret_key: '{{ aws_secret_key }}'
+        region: '{{ aws_region }}'
+
+  tasks:
+  - name: Terminate old server
+    import_tasks: tasks/termserver.yml

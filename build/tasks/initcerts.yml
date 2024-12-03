@@ -1,0 +1,32 @@
+---
+- name: Create cert directory
+  file:
+    path: certs
+    state: directory
+
+- name: Check if we have certs
+  delegate_to: localhost
+  stat:
+    path: "{{ playbook_dir }}/certs/{{ cert_name }}"
+  register: stat_result
+
+- name: Extract certs
+  unarchive:
+    src: "{{ playbook_dir }}/certs/{{ cert_name }}"
+    dest: .
+  when:
+    stat_result.stat.exists
+
+- name: Copy cert file
+  copy:
+    src: "letsencrypt/live/{{ inventory_hostname }}/{{ item }}.pem"
+    dest: certs/{{ item }}.pem
+    remote_src: yes
+  loop: [ fullchain, privkey ]
+  when:
+    stat_result.stat.exists
+
+- name: Create a temporary self-signed cert
+  shell: openssl req -x509 -newkey rsa:4096 -keyout ./certs/privkey.pem -out ./certs/fullchain.pem -sha256 -days 365 -nodes -subj '/CN={{ inventory_hostname }}'
+  when:
+    not stat_result.stat.exists
