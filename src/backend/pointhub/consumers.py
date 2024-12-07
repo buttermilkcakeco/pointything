@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 
@@ -20,7 +21,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         data = room.get(self.room_id)
         if data:
-            await self._bcast('roomUpdate', self._roomData(data))
+            await self._bcast(data)
 
     async def disconnect(self, close_code):
         logger.info('DISC %s %s', self.user_id, close_code)
@@ -57,24 +58,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self._send('ack', req['seq'])
 
         if data:
-            await self._bcast('roomUpdate', self._roomData(data))
+            await self._bcast(data)
 
     async def _send(self, msg_type, data):
         logger.info('SEND %s %s %s', self.user_id, msg_type, data)
         await self.send(text_data=json.dumps({'type': msg_type, 'data': data}))
 
-    async def _bcast(self, msg_type, data):
-        logger.info('BCAST %s %s %s', self.user_id, msg_type, data)
+    async def _bcast(self, data):
+        logger.info('BCAST %s %s', self.user_id, data)
         await self.channel_layer.group_send(
-            self.room_group_name, {'type': 'bcast.event', 'msg_type': msg_type, 'data': data}
+            self.room_group_name, {'type': 'bcast.room_update', 'data': data}
         )
 
-    async def bcast_event(self, event):
-        msg_type = event['msg_type']
+    async def bcast_room_update(self, event):
         data = event['data']
-        await self._send(msg_type, data)
+        await self._send('roomUpdate', self._room_data(data))
 
-    def _roomData(self, data):
+    def _room_data(self, data):
+        data = copy.deepcopy(data)
         data['isOwner'] = data['participants'][0]['id'] == self.user_id
         if not data['isOwner']:
             for p in data['participants']:

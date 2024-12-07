@@ -10,7 +10,7 @@ const { points } = Astro.props
   {
     points.map((value) => (
       <div
-        class="flex items-center justify-center h-64 rounded-lg text-3xl cursor-pointer"
+        class="flex items-center justify-center aspect-[2/3] rounded-lg text-3xl cursor-pointer"
         x-data={`{value: '${value}'}`}
         x-bind:class="value == room.myVote() ? 'bg-primary text-primary-text' : 'bg-secondary'"
         x-on:click="value == room.myVote() ? room.unvote() : room.vote(value)"

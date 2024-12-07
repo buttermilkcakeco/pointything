@@ -78,6 +78,6 @@ export const myVote = () => {
 
 export const consensus = () => {
   const parts = Alpine.store('room')?.participants
-  const votes = parts?.filter(({ vote }) => vote).map(({ vote }) => vote)
-  return votes.length > 1 && votes.every(({ vote }) => vote == votes[0])
+  const votes = parts?.filter(({ vote }) => !!vote).map(({ vote }) => vote)
+  return votes.length > 1 && votes.every(vote => vote == votes[0])
 }
