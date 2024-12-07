@@ -7,7 +7,7 @@ previously familiar with.
 
 This project is built using
 
-- [Astro](Asthttps://astro.build/)
+- [Astro](https://astro.build/)
 - [Alpine.js](https://alpinejs.dev/)
 - [htmx](https://htmx.org/)
 - [tailwindcss](https://tailwindcss.com/)
