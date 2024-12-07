@@ -1,0 +1,18 @@
+all:
+  hosts:
+  children:
+    prod:
+      hosts:
+        pointything.mydomain.com:
+
+      vars:
+        ansible_user: ec2-user
+
+        letsencrypt_email: ...
+        redis_root_password: putsomerandomstringhere
+
+        aws_access_key: "..."
+        aws_secret_key: "..."
+
+        aws_vpc_id: vpc-...
+        aws_keyname: "..."
