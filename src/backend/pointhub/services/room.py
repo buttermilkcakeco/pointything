@@ -18,6 +18,9 @@ def _save_room(c, room):
     c.json().set(room['id'], '$', room)
     c.expire(room['id'], time=ROOM_EXPIRATION_S)
 
+def _is_owner(room, user_id):
+    return room['participants'][0]['id'] == user_id
+
 def create(owner_name):
     room = {
         'id': create_id(),
@@ -80,5 +83,15 @@ def reset_votes(room_id):
 
         for user in room['participants']:
             user.pop('vote', None)
+        _save_room(c, room)
+        return room
+
+def remove_user(room_id, req_user_id, del_user_id):
+    with cache.connection() as c:
+        room = _get_room(c, room_id)
+        if not room or not _is_owner(room, req_user_id) or req_user_id == del_user_id:
+            return None
+
+        room['participants'] = [p for p in room['participants'] if p['id'] != del_user_id]
         _save_room(c, room)
         return room

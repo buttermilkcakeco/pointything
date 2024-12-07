@@ -20,7 +20,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         data = room.get(self.room_id)
         if data:
-            await self._bcast('roomUpdate', data)
+            await self._bcast('roomUpdate', self._roomData(data))
 
     async def disconnect(self, close_code):
         logger.info('DISC %s %s', self.user_id, close_code)
@@ -31,35 +31,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         logger.info('RX %s %s', self.user_id, req)
 
-        if req['type'] == 'get':
-            data = room.get(self.room_id)
-            await self._send('roomUpdate', data)
+        data = None
 
-        elif req['type'] == 'vote':
+        if req['type'] == 'vote':
             points = req.get('data', None)
             data = room.vote(self.room_id, self.user_id, points)
-            if data:
-                await self._bcast('roomUpdate', data)
 
         elif req['type'] == 'unvote':
             data = room.vote(self.room_id, self.user_id, None)
-            if data:
-                await self._bcast('roomUpdate', data)
 
         elif req['type'] == 'reset':
             data = room.reset_votes(self.room_id)
-            if data:
-                await self._bcast('roomUpdate', data)
 
         elif req['type'] == 'reveal':
             data = room.set_reveal(self.room_id, True)
-            if data:
-                await self._bcast('roomUpdate', data)
 
         elif req['type'] == 'unreveal':
             data = room.set_reveal(self.room_id, False)
-            if data:
-                await self._bcast('roomUpdate', data)
+
+        elif req['type'] == 'removeUser':
+            user_id = req.get('data', None)
+            data = room.remove_user(self.room_id, self.user_id, user_id)
+
+        if req.get('seq'):
+            await self._send('ack', req['seq'])
+
+        if data:
+            await self._bcast('roomUpdate', self._roomData(data))
 
     async def _send(self, msg_type, data):
         logger.info('SEND %s %s %s', self.user_id, msg_type, data)
@@ -75,3 +73,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         msg_type = event['msg_type']
         data = event['data']
         await self._send(msg_type, data)
+
+    def _roomData(self, data):
+        data['isOwner'] = data['participants'][0]['id'] == self.user_id
+        if not data['isOwner']:
+            for p in data['participants']:
+                if p['id'] != self.user_id:
+                    del p['id']
+        return data

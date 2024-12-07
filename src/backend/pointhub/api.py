@@ -27,11 +27,3 @@ def join_room(request, values, room_id):
     if not user_id:
         raise Http404('Unknown room')
     return {'user': user_id}
-
-@routes.register('room/<room_id>')
-@json_response
-def get_room(request, values, room_id):
-    data = room.get(room_id)
-    if not data:
-        raise Http404('Unknown room')
-    return data

@@ -7,7 +7,7 @@
     <h2 class="text-primary-text text-md">Vote Results</h2>
   </div>
 
-  <template x-for="user in $store.room.participants">
+  <template x-for="(user, index) in $store.room.participants">
     <div class="flex flex-row items-center my-2 mx-5">
       <div class="flex-1 px-2" x-text="user.name"></div>
       <div class="px-2">
@@ -19,6 +19,12 @@
             :class="user.vote ? 'iconify mdi--check-circle' : 'iconify mdi--timer-sand'"
           ></span>
         </template>
+      </div>
+      <template x-if="$store.room.isOwner">
+        <div class="px-2 w-8 flex items-center cursor-pointer" @click="window.room.removeUser(user.id)">
+          <span :class="index > 0 ? 'iconify mdi--delete' : ''"></span>
+        </div>
+      </template>
       </div>
     </div>
   </template>

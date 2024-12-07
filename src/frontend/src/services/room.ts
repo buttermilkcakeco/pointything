@@ -68,6 +68,7 @@ export const unvote = () => _send('unvote', {})
 export const resetVotes = () => _send('reset', {})
 export const reveal = () => _send('reveal', {})
 export const unreveal = () => _send('unreveal', {})
+export const removeUser = (userId) => _send('removeUser', userId)
 
 export const myVote = () => {
   const userId = Alpine.store('user').id
@@ -77,5 +78,6 @@ export const myVote = () => {
 
 export const consensus = () => {
   const parts = Alpine.store('room')?.participants
-  return parts?.every(({ vote }) => vote && vote == parts?.[0].vote)
+  const votes = parts?.filter(({ vote }) => vote).map(({ vote }) => vote)
+  return votes.length > 1 && votes.every(({ vote }) => vote == votes[0])
 }
