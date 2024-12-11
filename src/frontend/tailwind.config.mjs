@@ -10,7 +10,14 @@ export default {
       'primary-text': 'white',
       secondary: '#eee',
       success: '#4D766E',
+      'body-dark': '#212121',
+      'text-dark': 'white',
+      'primary-dark': '#454545',
+      black: '#000'
     },
   },
   plugins: [addIconSelectors(['mdi'])],
+  safelist: [
+    'text-black'
+  ]
 }

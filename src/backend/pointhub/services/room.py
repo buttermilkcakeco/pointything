@@ -83,6 +83,7 @@ def reset_votes(room_id):
 
         for user in room['participants']:
             user.pop('vote', None)
+        room['revealed'] = False
         _save_room(c, room)
         return room
 

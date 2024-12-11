@@ -12,7 +12,7 @@ const { points } = Astro.props
       <div
         class="flex items-center justify-center aspect-[2/3] rounded-lg text-3xl cursor-pointer"
         x-data={`{value: '${value}'}`}
-        x-bind:class="value == room.myVote() ? 'bg-primary text-primary-text' : 'bg-secondary'"
+        x-bind:class="value == room.myVote() ? 'bg-primary text-primary-text' : 'bg-secondary dark:bg-primary-dark'"
         x-on:click="value == room.myVote() ? room.unvote() : room.vote(value)"
       >
         {value}

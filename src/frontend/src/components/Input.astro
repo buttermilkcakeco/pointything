@@ -4,13 +4,17 @@ const { className, ...props } = Astro.props
 
 <input
   class:list={[
-    'px-0 py-2 focus:px-2',
+    'px-3 py-3',
     'border-b',
     'focus:border-b-2',
     'focus:border-b-primary',
     'disabled:bg-slate-50',
     'transition-all',
     'outline-none',
+    'dark:border',
+    'dark:border-black',
+    'dark:rounded',
+    'text-black',
     className,
   ]}
   {...props}
